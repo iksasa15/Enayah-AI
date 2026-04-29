@@ -13,7 +13,7 @@ const doctorProfile = {
 const screens = [
   { id: 'dashboard', label: 'الطبيب', note: 'ملف الطبيب والمؤشرات' },
   { id: 'alerts', label: 'غرفة التنبيهات', note: 'أولوية الحالات الحرجة' },
-  { id: 'caseDetails', label: 'ملف الحالة', note: 'عرض سريري تفصيلي' },
+  { id: 'caseDetails', label: 'المرضى', note: 'قائمة المرضى والملف السريري' },
   { id: 'triage', label: 'إدارة الفرز', note: 'تدفق الطوارئ' },
   { id: 'vitals', label: 'مؤشرات حيوية', note: 'تحليل أنماط لحظي' },
   { id: 'differential', label: 'ترجيح التشخيص', note: 'مقارنة احتمالات' },
@@ -75,7 +75,7 @@ const doctorRecentPatients = [
   { id: 'PT-2190', name: 'لينا العتيبي', last: 'استشارة', when: 'قبل يومين' },
 ]
 
-/** ملف الحالة — قائمة مرضى + هوية وطنية (تجريبي) */
+/** المرضى — قائمة + هوية وطنية (تجريبي) */
 const caseFilePatients = [
   {
     fileId: 'PT-1042',
@@ -223,7 +223,7 @@ function App() {
                 : activeScreen === 'alerts'
                   ? 'محدّث من أنظمة المراقبة — جاهزية الفريق للاستجابة (11:42 ص)'
                   : activeScreen === 'caseDetails'
-                    ? 'اختر مريضًا من القائمة أو ابحث بهويته أو رقم ملفه'
+                    ? 'استعرض المرضى، ابحث بالهوية أو رقم الملف، وافتح الملف السريري'
                     : 'آخر تحديث تشغيلي: 11:42 AM - نموذج عرض ببيانات تجريبية'}
             </p>
           </div>
@@ -513,48 +513,55 @@ function App() {
         )}
 
         {activeScreen === 'caseDetails' && (
-          <div className="case-file-page doctor-main-surface">
-            <aside className="card case-file-sidebar">
-              <div className="case-file-sidebar-head">
-                <h3 className="case-file-sidebar-title">المرضى</h3>
-                <span className="case-file-count">{caseFileVisible.length}</span>
+          <div className="patients-page doctor-main-surface">
+            <aside className="card patients-sidebar">
+              <div className="patients-sidebar-top">
+                <h3 className="patients-sidebar-title">قائمة المرضى</h3>
+                <span className="patients-sidebar-count">{caseFileVisible.length}</span>
               </div>
-              <div className="case-file-search-wrap">
-                <label className="doctor-sr-only" htmlFor="case-file-search-input">
+              <div className="patients-search">
+                <label className="doctor-sr-only" htmlFor="patients-search-input">
                   بحث بهوية المريض أو رقم الملف
                 </label>
-                <span className="case-file-search-icon" aria-hidden="true">
-                  🔍
-                </span>
-                <input
-                  id="case-file-search-input"
-                  type="search"
-                  className="case-file-search-input"
-                  placeholder="هوية المريض، رقم الملف، أو الاسم…"
-                  value={caseFileSearch}
-                  onChange={(e) => setCaseFileSearch(e.target.value)}
-                  autoComplete="off"
-                />
+                <div className="patients-search-inner">
+                  <span className="patients-search-icon" aria-hidden="true">
+                    🔍
+                  </span>
+                  <input
+                    id="patients-search-input"
+                    type="search"
+                    className="patients-search-input"
+                    placeholder="هوية، رقم ملف، أو اسم…"
+                    value={caseFileSearch}
+                    onChange={(e) => setCaseFileSearch(e.target.value)}
+                    autoComplete="off"
+                  />
+                </div>
               </div>
               {caseFileVisible.length === 0 ? (
-                <p className="case-file-empty">لا توجد نتائج مطابقة للبحث</p>
+                <p className="patients-empty">لا توجد نتائج مطابقة للبحث</p>
               ) : (
-                <ul className="case-file-list">
+                <ul className="patients-list">
                   {caseFileVisible.map((p) => (
                     <li key={p.fileId}>
                       <button
                         type="button"
-                        className={`case-file-item ${
+                        className={`patients-row ${
                           selectedCasePatient?.fileId === p.fileId ? 'is-active' : ''
                         }`}
                         onClick={() => setCaseFilePatientId(p.fileId)}
                       >
-                        <span className="case-file-item-name">{p.name}</span>
-                        <span className="case-file-item-meta">
-                          <span className="case-file-item-file">{p.fileId}</span>
-                          <span className="case-file-item-nid">هوية: {p.nationalId}</span>
+                        <span className="patients-row-avatar" aria-hidden="true">
+                          {p.name.charAt(0)}
                         </span>
-                        <span className="case-file-item-age">{p.age} سنة</span>
+                        <span className="patients-row-body">
+                          <span className="patients-row-name">{p.name}</span>
+                          <span className="patients-row-meta">
+                            <span className="patients-row-file">{p.fileId}</span>
+                            <span className="patients-row-nid">هوية {p.nationalId}</span>
+                          </span>
+                        </span>
+                        <span className="patients-row-age">{p.age} سنة</span>
                       </button>
                     </li>
                   ))}
@@ -562,36 +569,72 @@ function App() {
               )}
             </aside>
 
-            <div className="case-file-main">
+            <div className="patients-main">
               {selectedCasePatient ? (
-                <section className="grid two case-file-grid">
-                  <article className="card case-file-card">
-                    <div className="case-file-card-head">
-                      <h3>البيانات السريرية</h3>
-                      <p className="case-file-card-patient">
-                        {selectedCasePatient.name} — {selectedCasePatient.fileId}
-                      </p>
+                <>
+                  <header className="card patients-hero">
+                    <span className="patients-hero-avatar" aria-hidden="true">
+                      {selectedCasePatient.name.charAt(0)}
+                    </span>
+                    <div className="patients-hero-text">
+                      <h3 className="patients-hero-name">{selectedCasePatient.name}</h3>
+                      <div className="patients-hero-chips">
+                        <span className="patients-chip">{selectedCasePatient.fileId}</span>
+                        <span className="patients-chip patients-chip-muted">
+                          هوية {selectedCasePatient.nationalId}
+                        </span>
+                      </div>
                     </div>
-                    <ul className="list case-file-vitals">
-                      <li>العمر: {selectedCasePatient.age} سنة</li>
-                      <li>ضغط الدم: {selectedCasePatient.bp}</li>
-                      <li>تشبع الأكسجين: {selectedCasePatient.spo2}</li>
-                      <li>معدل النبض: {selectedCasePatient.pulse}</li>
-                      <li>زمن الوصول: {selectedCasePatient.arrival}</li>
-                      <li>الهوية الوطنية: {selectedCasePatient.nationalId}</li>
-                    </ul>
-                  </article>
-                  <article className="card case-file-card">
-                    <div className="case-file-card-head">
-                      <h3>نتيجة الفحص الأولي</h3>
-                      <p className="case-file-card-patient">{selectedCasePatient.name}</p>
-                    </div>
-                    <div className="scan case-file-scan">{selectedCasePatient.scanLabel}</div>
-                    <p className="muted case-file-rec">{selectedCasePatient.recommendation}</p>
-                  </article>
-                </section>
+                  </header>
+                  <section className="grid two patients-detail-grid">
+                    <article className="card patients-panel">
+                      <div className="patients-panel-head">
+                        <h3>البيانات السريرية</h3>
+                      </div>
+                      <div className="patients-vitals-grid">
+                        <div className="patients-vital-cell">
+                          <span className="patients-vital-label">العمر</span>
+                          <span className="patients-vital-value">
+                            {selectedCasePatient.age} سنة
+                          </span>
+                        </div>
+                        <div className="patients-vital-cell">
+                          <span className="patients-vital-label">ضغط الدم</span>
+                          <span className="patients-vital-value">{selectedCasePatient.bp}</span>
+                        </div>
+                        <div className="patients-vital-cell">
+                          <span className="patients-vital-label">تشبع الأكسجين</span>
+                          <span className="patients-vital-value">{selectedCasePatient.spo2}</span>
+                        </div>
+                        <div className="patients-vital-cell">
+                          <span className="patients-vital-label">معدل النبض</span>
+                          <span className="patients-vital-value">{selectedCasePatient.pulse}</span>
+                        </div>
+                        <div className="patients-vital-cell">
+                          <span className="patients-vital-label">زمن الوصول</span>
+                          <span className="patients-vital-value">
+                            {selectedCasePatient.arrival}
+                          </span>
+                        </div>
+                        <div className="patients-vital-cell patients-vital-cell-wide">
+                          <span className="patients-vital-label">الهوية الوطنية</span>
+                          <span className="patients-vital-value">
+                            {selectedCasePatient.nationalId}
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                    <article className="card patients-panel">
+                      <div className="patients-panel-head">
+                        <h3>نتيجة الفحص الأولي</h3>
+                      </div>
+                      <div className="scan patients-scan">{selectedCasePatient.scanLabel}</div>
+                      <p className="muted patients-rec">{selectedCasePatient.recommendation}</p>
+                    </article>
+                  </section>
+                </>
               ) : (
-                <article className="card case-file-empty-main">
+                <article className="card patients-empty-main">
                   <h3>لا يوجد مريض للعرض</h3>
                   <p className="muted">جرّب تعديل نص البحث أو مسح الحقل لعرض القائمة كاملة.</p>
                 </article>
