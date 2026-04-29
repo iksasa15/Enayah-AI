@@ -59,7 +59,6 @@ function App() {
             <h2>{currentScreen.label}</h2>
             <p>نسخة عرض توضيحية فقط - بيانات وهمية غير طبية</p>
           </div>
-          <div className="status-chip">المسار الأول: التقنيات الصحية + الذكاء الاصطناعي</div>
         </header>
 
         {activeScreen === 'dashboard' && (
