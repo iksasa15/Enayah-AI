@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const doctorProfile = {
@@ -19,6 +19,12 @@ const screens = [
   { id: 'differential', label: 'ترجيح التشخيص', note: 'مقارنة احتمالات' },
   { id: 'optimization', label: 'كفاءة الموارد', note: 'استغلال الأسرّة' },
   { id: 'report', label: 'الملخص التنفيذي', note: 'مخرجات العرض' },
+]
+
+const chatbotDemoReplies = [
+  'شكرًا لسؤالك. هذا عرض تجريبي — للقرار الطبي النهائي راجع المختص.',
+  'تم استلام رسالتك. في النسخة الكاملة ستُربط الإجابات بالبروتوكولات والملفات المعتمدة.',
+  'تنبيه: المساعد هنا للتوجيه فقط ولا يُعد تشخيصًا أو وصفة طبية.',
 ]
 
 const kpis = [
@@ -150,6 +156,16 @@ function App() {
   const [calendarMonth, setCalendarMonth] = useState('2026-04')
   const [caseFilePatientId, setCaseFilePatientId] = useState(caseFilePatients[0].fileId)
   const [caseFileSearch, setCaseFileSearch] = useState('')
+  const [chatMessages, setChatMessages] = useState(() => [
+    {
+      id: 'chat-welcome',
+      role: 'assistant',
+      text: 'مرحبًا، أنا مساعد مُنجِد. اسأل عن تشغيل الطوارئ أو توضيح مصطلح — تذكّر أن هذا ليس تشخيصًا طبيًا.',
+    },
+  ])
+  const [chatInput, setChatInput] = useState('')
+  const [chatPanelOpen, setChatPanelOpen] = useState(false)
+  const chatEndRef = useRef(null)
 
   const current = useMemo(
     () => screens.find((item) => item.id === activeScreen) ?? screens[0],
@@ -180,6 +196,24 @@ function App() {
     if (hit) return hit
     return caseFileVisible[0] ?? null
   }, [caseFileVisible, caseFilePatientId])
+
+  useEffect(() => {
+    if (!chatPanelOpen) return
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages, chatPanelOpen])
+
+  const sendChatMessage = () => {
+    const text = chatInput.trim()
+    if (!text) return
+    setChatInput('')
+    setChatMessages((prev) => [...prev, { id: `u-${Date.now()}`, role: 'user', text }])
+    window.setTimeout(() => {
+      setChatMessages((prev) => {
+        const idx = prev.length % chatbotDemoReplies.length
+        return [...prev, { id: `a-${Date.now()}`, role: 'assistant', text: chatbotDemoReplies[idx] }]
+      })
+    }, 450)
+  }
 
   return (
     <div className="app" dir="rtl">
@@ -782,7 +816,96 @@ function App() {
             </section>
           </div>
         )}
+
       </main>
+
+      <button
+        type="button"
+        className="chat-fab"
+        aria-label={chatPanelOpen ? 'إغلاق مساعد الشات' : 'فتح مساعد الشات'}
+        aria-expanded={chatPanelOpen}
+        aria-controls="chat-panel-dialog"
+        onClick={() => setChatPanelOpen((open) => !open)}
+      >
+        <span className="chat-fab-icon" aria-hidden="true">
+          🤖
+        </span>
+      </button>
+
+      {chatPanelOpen && (
+        <>
+          <div
+            className="chat-panel-backdrop"
+            aria-hidden
+            onClick={() => setChatPanelOpen(false)}
+          />
+          <aside
+            id="chat-panel-dialog"
+            className="chat-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="chat-panel-title"
+          >
+            <section className="card chatbot-card">
+              <div className="chatbot-card-head">
+                <div>
+                  <h3 id="chat-panel-title" className="chatbot-title">
+                    مساعد مُنجِد
+                  </h3>
+                  <p className="chatbot-sub">
+                    نموذج عرض — للاستفسار العام والتشغيل. لا تعتمد على الشات للقرارات السريرية الحرجة.
+                  </p>
+                </div>
+                <div className="chatbot-head-actions">
+                  <span className="chatbot-pill">وضع تجريبي</span>
+                  <button
+                    type="button"
+                    className="chat-panel-close"
+                    aria-label="إغلاق الشات"
+                    onClick={() => setChatPanelOpen(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <div className="chatbot-messages" role="log" aria-live="polite" aria-relevant="additions">
+                {chatMessages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`chatbot-bubble ${m.role === 'user' ? 'chatbot-bubble--user' : 'chatbot-bubble--assistant'}`}
+                  >
+                    {m.text}
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
+              <form
+                className="chatbot-form"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  sendChatMessage()
+                }}
+              >
+                <label className="doctor-sr-only" htmlFor="chatbot-input">
+                  رسالة إلى المساعد
+                </label>
+                <input
+                  id="chatbot-input"
+                  type="text"
+                  className="chatbot-input"
+                  placeholder="اكتب سؤالك هنا…"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  autoComplete="off"
+                />
+                <button type="submit" className="chatbot-send">
+                  إرسال
+                </button>
+              </form>
+            </section>
+          </aside>
+        </>
+      )}
     </div>
   )
 }

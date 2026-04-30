@@ -780,6 +780,212 @@
   font-weight: 600;
 }
 
+/* شات بوت — هوية المنصة */
+.chatbot-card {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: min(640px, calc(100vh - 200px));
+  border: 1px solid #dce8e3;
+}
+
+.chatbot-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, #f2faf7 0%, #ecf6f2 100%);
+  border-bottom: 1px solid #e0ebe6;
+  flex-shrink: 0;
+}
+
+.chatbot-title {
+  margin: 0 0 6px;
+  font-size: 1.08rem;
+  color: #1f3b34;
+}
+
+.chatbot-sub {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #6d8a80;
+  line-height: 1.45;
+  max-width: 52ch;
+}
+
+.chatbot-pill {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #24856f, #1f7763);
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chatbot-messages {
+  flex: 1;
+  min-height: 220px;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(180deg, #fbfcfb 0%, #f4f9f6 100%);
+}
+
+.chatbot-bubble {
+  max-width: min(88%, 420px);
+  padding: 10px 14px;
+  border-radius: 14px;
+  line-height: 1.55;
+  font-size: 0.88rem;
+}
+
+.chatbot-bubble--assistant {
+  align-self: flex-end;
+  background: #fff;
+  border: 1px solid #e2ebe7;
+  color: #1f3b34;
+  box-shadow: 0 2px 10px rgba(31, 73, 62, 0.05);
+}
+
+.chatbot-bubble--user {
+  align-self: flex-start;
+  background: linear-gradient(180deg, #24856f, #1f7763);
+  color: #fff;
+}
+
+.chatbot-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid #e4efe9;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.chatbot-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #d5e6df;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: #1f3b34;
+  background: #fafcfb;
+  outline: none;
+}
+
+.chatbot-input:focus {
+  border-color: #24856f;
+  box-shadow: 0 0 0 3px rgba(36, 133, 111, 0.12);
+}
+
+.chatbot-send {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #24856f, #1f7763);
+}
+
+.chatbot-send:hover {
+  filter: brightness(1.03);
+}
+
+.chatbot-head-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.chat-panel-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #d5e6df;
+  background: #fff;
+  color: #4d6560;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.chat-panel-close:hover {
+  background: #f2faf7;
+  border-color: #24856f;
+  color: #1f7763;
+}
+
+/* زر شات بوت ثابت + لوحة منبثقة (الزاوية اليسرى السفلى) */
+.chat-fab {
+  position: fixed;
+  bottom: max(22px, env(safe-area-inset-bottom, 0px));
+  left: max(22px, env(safe-area-inset-left, 0px));
+  right: auto;
+  z-index: 6000;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #2a9d82 0%, #24856f 48%, #1a5d4e 100%);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(26, 93, 78, 0.38);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.chat-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 14px 36px rgba(26, 93, 78, 0.45);
+}
+
+.chat-fab-icon {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.chat-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5998;
+  background: rgba(24, 52, 44, 0.36);
+  backdrop-filter: blur(4px);
+}
+
+.chat-panel {
+  position: fixed;
+  z-index: 5999;
+  bottom: calc(max(22px, env(safe-area-inset-bottom, 0px)) + 56px + 14px);
+  left: max(22px, env(safe-area-inset-left, 0px));
+  right: auto;
+  width: min(400px, calc(100vw - 36px));
+  max-height: min(560px, calc(100vh - 120px));
+  filter: drop-shadow(0 16px 40px rgba(26, 93, 78, 0.22));
+}
+
+.chat-panel .chatbot-card {
+  max-height: min(520px, calc(100vh - 160px));
+}
+
 /* المرضى — قائمة + تفاصيل سريرية */
 .patients-page {
   display: grid;
@@ -2168,6 +2374,7 @@
 
   .differential-card-head,
   .report-card-head,
+  .chatbot-card-head,
   .vitals-card-head,
   .optimization-card-head {
     flex-direction: column;
@@ -2176,6 +2383,7 @@
 
   .differential-pill,
   .report-pill,
+  .chatbot-pill,
   .vitals-head-pill,
   .optimization-pill {
     width: fit-content;
@@ -2183,5 +2391,26 @@
 
   .patients-vitals-grid {
     grid-template-columns: 1fr;
+  }
+
+  .chat-panel {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 56px + 12px);
+    max-height: min(68vh, 520px);
+  }
+
+  .chat-fab {
+    left: 12px;
+    right: auto;
+    bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .chatbot-head-actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
   }
 }
