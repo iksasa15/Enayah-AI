@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import './App.css'
 
 const doctorProfile = {
-  name: 'د. أليشا نيكولز',
-  specialty: 'أخصائية جلدية',
+  name: 'د. عبدالله علي',
+  specialty: 'أخصائي أطفال',
   location: 'الرياض، المملكة العربية السعودية',
-  dob: '17.07.86',
+  dob: '17.07.98',
   bloodType: '+A',
   workHours: '9:00 ص – 5:00 م',
 }
@@ -37,18 +37,20 @@ const alerts = [
 ]
 
 const triageRows = [
-  { lane: 'أحمر', count: 28, wait: '4 د', next: 'إدخال مباشر' },
-  { lane: 'برتقالي', count: 44, wait: '11 د', next: 'فحص سريع' },
-  { lane: 'أصفر', count: 59, wait: '23 د', next: 'تحويل منظم' },
-  { lane: 'أخضر', count: 70, wait: '36 د', next: 'رعاية عاجلة' },
+  { lane: 'أحمر', laneKey: 'red', count: 28, wait: '4 د', next: 'إدخال مباشر' },
+  { lane: 'برتقالي', laneKey: 'orange', count: 44, wait: '11 د', next: 'فحص سريع' },
+  { lane: 'أصفر', laneKey: 'yellow', count: 59, wait: '23 د', next: 'تحويل منظم' },
+  { lane: 'أخضر', laneKey: 'green', count: 70, wait: '36 د', next: 'رعاية عاجلة' },
 ]
+
+const triageActiveTotal = triageRows.reduce((sum, row) => sum + row.count, 0)
 
 /** شريط أسبوع واحد (نموذج تقويمي) */
 const calendarWeekStrip = [
   { key: '26', dow: 'أحد', num: 26, monthHint: 'أبريل' },
   { key: '27', dow: 'إثنين', num: 27, monthHint: 'أبريل' },
-  { key: '28', dow: 'ثلاث', num: 28, monthHint: 'أبريل' },
-  { key: '29', dow: 'أربع', num: 29, monthHint: 'أبريل' },
+  { key: '28', dow: 'ثلاثاء', num: 28, monthHint: 'أبريل' },
+  { key: '29', dow: 'أربعاء', num: 29, monthHint: 'أبريل' },
   { key: '30', dow: 'خميس', num: 30, monthHint: 'أبريل' },
   { key: '1', dow: 'جمعة', num: 1, monthHint: 'مايو' },
   { key: '2', dow: 'سبت', num: 2, monthHint: 'مايو' },
@@ -219,19 +221,22 @@ function App() {
             <h2>{current.label}</h2>
             <p>
               {activeScreen === 'dashboard'
-                ? 'بحث، مهام، إجراءات سريعة، وتقويمك في مكان واحد'
+                ? 'مهام، إجراءات سريعة، وتقويمك في مكان واحد'
                 : activeScreen === 'alerts'
                   ? 'محدّث من أنظمة المراقبة — جاهزية الفريق للاستجابة (11:42 ص)'
-                  : activeScreen === 'caseDetails'
-                    ? 'استعرض المرضى، ابحث بالهوية أو رقم الملف، وافتح الملف السريري'
-                    : 'آخر تحديث تشغيلي: 11:42 AM - نموذج عرض ببيانات تجريبية'}
+                  : activeScreen === 'triage'
+                    ? 'عرض حي لمسارات الأولوية — مزامنة مع طوابق الطوارئ (11:42 ص)'
+                    : activeScreen === 'caseDetails'
+                      ? 'استعرض المرضى، ابحث بالهوية أو رقم الملف، وافتح الملف السريري'
+                      : 'آخر تحديث تشغيلي: 11:42 AM - نموذج عرض ببيانات تجريبية'}
             </p>
           </div>
           <div className="header-meta">
             <span className="pill">
               {activeScreen === 'dashboard' ||
               activeScreen === 'alerts' ||
-              activeScreen === 'caseDetails'
+              activeScreen === 'caseDetails' ||
+              activeScreen === 'triage'
                 ? 'التشغيل مستقر'
                 : 'System Stable'}
             </span>
@@ -251,7 +256,7 @@ function App() {
                 </div>
                 <div className="doctor-profile-body">
                   <div className="doctor-avatar" aria-hidden="true">
-                    👩‍⚕️
+                    👨‍⚕️
                   </div>
                   <div className="doctor-profile-text">
                     <h3 className="doctor-name">{doctorProfile.name}</h3>
@@ -260,17 +265,17 @@ function App() {
                   </div>
                 </div>
                 <div className="doctor-profile-stats">
-                  <div>
+                  <div className="doctor-stat-cell">
                     <span className="doctor-stat-label">تاريخ الميلاد</span>
                     <strong>{doctorProfile.dob}</strong>
                   </div>
-                  <div>
-                    <span className="doctor-stat-label">فصيلة الدم</span>
-                    <strong>{doctorProfile.bloodType}</strong>
-                  </div>
-                  <div>
+                  <div className="doctor-stat-cell">
                     <span className="doctor-stat-label">ساعات العمل</span>
                     <strong>{doctorProfile.workHours}</strong>
+                  </div>
+                  <div className="doctor-stat-cell">
+                    <span className="doctor-stat-label">فصيلة الدم</span>
+                    <strong>{doctorProfile.bloodType}</strong>
                   </div>
                 </div>
               </article>
@@ -355,22 +360,6 @@ function App() {
                   </div>
                 </div>
               </article>
-
-              <div className="card doctor-search-card">
-                <label className="doctor-sr-only" htmlFor="doctor-search-input">
-                  بحث عن مريض أو ملف
-                </label>
-                <span className="doctor-search-icon" aria-hidden="true">
-                  🔍
-                </span>
-                <input
-                  id="doctor-search-input"
-                  type="search"
-                  className="doctor-search-input"
-                  placeholder="ابحث عن مريض، رقم ملف، تشخيص، أو موعد…"
-                  autoComplete="off"
-                />
-              </div>
 
               <section className="doctor-kpi-row" aria-label="مؤشرات سريعة">
                 {kpis.map((kpi) => (
@@ -644,98 +633,154 @@ function App() {
         )}
 
         {activeScreen === 'triage' && (
-          <section className="card table">
-            <h3>لوحة مسارات الفرز</h3>
-            <div className="table-head four-cols">
-              <span>المسار</span>
-              <span>عدد الحالات</span>
-              <span>زمن الانتظار</span>
-              <span>الإجراء المقترح</span>
-            </div>
-            {triageRows.map((row) => (
-              <div key={row.lane} className="table-row four-cols">
-                <span>{row.lane}</span>
-                <span>{row.count}</span>
-                <span>{row.wait}</span>
-                <span>{row.next}</span>
+          <div className="triage-page doctor-main-surface">
+            <section className="card triage-card">
+              <div className="triage-card-head">
+                <div>
+                  <h3 className="triage-card-title">لوحة مسارات الفرز</h3>
+                  <p className="triage-card-sub">
+                    توزيع الحالات حسب مستوى الأولوية السريرية — ألوان المسار تساعد الفريق على التوجيه السريع
+                  </p>
+                </div>
+                <span className="triage-count-pill">{triageActiveTotal} حالة في المسارات</span>
               </div>
-            ))}
-          </section>
+              <div className="triage-scroll">
+                <div className="triage-thead">
+                  <span>المسار</span>
+                  <span>عدد الحالات</span>
+                  <span>زمن الانتظار</span>
+                  <span>الإجراء المقترح</span>
+                </div>
+                {triageRows.map((row) => (
+                  <div key={row.lane} className="triage-trow">
+                    <span className="triage-cell triage-cell-lane">
+                      <span
+                        className={`triage-lane-dot triage-lane-dot--${row.laneKey}`}
+                        aria-hidden
+                      />
+                      <span className="triage-lane-name">{row.lane}</span>
+                    </span>
+                    <span className="triage-cell triage-cell-count">{row.count}</span>
+                    <span className="triage-cell triage-cell-wait">{row.wait}</span>
+                    <span className="triage-cell triage-cell-action">
+                      <span className={`triage-action-pill triage-action-pill--${row.laneKey}`}>
+                        {row.next}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
         )}
 
         {activeScreen === 'vitals' && (
-          <section className="grid two">
-            <article className="card">
-              <h3>اتجاه العلامات الحيوية</h3>
-              <div className="bars">
-                {timeline.map((point, index) => (
-                  <span key={point + index} style={{ height: `${point}%` }} />
-                ))}
-              </div>
-            </article>
-            <article className="card">
-              <h3>ملاحظات تحليلية</h3>
-              <ul className="list">
-                <li>تذبذب ضغط مستمر خلال آخر 20 دقيقة.</li>
-                <li>ارتفاع حمل التنفس مع انخفاض تشبع الأكسجين.</li>
-                <li>ارتباط النمط الحالي بمؤشر خطورة مرتفع.</li>
-              </ul>
-            </article>
-          </section>
+          <div className="vitals-page doctor-main-surface">
+            <section className="vitals-grid">
+              <article className="card vitals-card vitals-chart-card">
+                <div className="vitals-card-head">
+                  <h3>اتجاه العلامات الحيوية</h3>
+                  <span className="vitals-head-pill">آخر 12 قراءة</span>
+                </div>
+                <div className="bars vitals-bars">
+                  {timeline.map((point, index) => (
+                    <span key={point + index} style={{ height: `${point}%` }} />
+                  ))}
+                </div>
+              </article>
+              <article className="card vitals-card">
+                <div className="vitals-card-head">
+                  <h3>ملاحظات تحليلية</h3>
+                  <span className="vitals-head-pill vitals-head-pill--soft">مقروء آليًا</span>
+                </div>
+                <ul className="list vitals-list">
+                  <li>تذبذب ضغط مستمر خلال آخر 20 دقيقة.</li>
+                  <li>ارتفاع حمل التنفس مع انخفاض تشبع الأكسجين.</li>
+                  <li>ارتباط النمط الحالي بمؤشر خطورة مرتفع.</li>
+                </ul>
+              </article>
+            </section>
+          </div>
         )}
 
         {activeScreen === 'differential' && (
-          <section className="grid three">
-            {[
-              ['نزيف دماغي', 82],
-              ['جلطة إقفارية', 67],
-              ['أزمة ضغط حادة', 49],
-            ].map(([name, score]) => (
-              <article key={name} className="card">
-                <h3>{name}</h3>
-                <strong className="score">{score}%</strong>
-                <div className="meter">
-                  <span style={{ width: `${score}%` }} />
+          <div className="differential-page doctor-main-surface">
+            <section className="card differential-card">
+              <div className="differential-card-head">
+                <div>
+                  <h3 className="differential-title">ترجيح التشخيص</h3>
+                  <p className="differential-sub">مقارنة الاحتمالات بناءً على أنماط المؤشرات الحيوية</p>
                 </div>
-              </article>
-            ))}
-          </section>
+                <span className="differential-pill">3 احتمالات رئيسية</span>
+              </div>
+              <div className="differential-grid">
+                {[
+                  ['نزيف دماغي', 82],
+                  ['جلطة إقفارية', 67],
+                  ['أزمة ضغط حادة', 49],
+                ].map(([name, score]) => (
+                  <article key={name} className="differential-item">
+                    <h3>{name}</h3>
+                    <strong className="score differential-score">{score}%</strong>
+                    <div className="meter differential-meter">
+                      <span style={{ width: `${score}%` }} />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
         )}
 
         {activeScreen === 'optimization' && (
-          <section className="grid two">
-            <article className="card">
-              <h3>مؤشرات الكفاءة</h3>
-              <ul className="list">
-                <li>خفض إشغال الأسرة غير الضروري: 29%</li>
-                <li>رفع سرعة التوجيه السريري: 21%</li>
-                <li>تقليل زمن انتظار المسار الحرج: 17%</li>
-              </ul>
-            </article>
-            <article className="card">
-              <h3>اقتراحات تشغيلية</h3>
-              <ul className="list">
-                <li>تحويل الحالات الخضراء إلى مركز الرعاية العاجلة.</li>
-                <li>تفعيل مسار تقييم سريع للحالات البرتقالية.</li>
-                <li>إعادة توزيع الطواقم في ساعات الذروة.</li>
-              </ul>
-            </article>
-          </section>
+          <div className="optimization-page doctor-main-surface">
+            <section className="optimization-grid">
+              <article className="card optimization-card">
+                <div className="optimization-card-head">
+                  <h3>مؤشرات الكفاءة</h3>
+                  <span className="optimization-pill">نتائج الأداء</span>
+                </div>
+                <ul className="list optimization-list">
+                  <li>خفض إشغال الأسرة غير الضروري: 29%</li>
+                  <li>رفع سرعة التوجيه السريري: 21%</li>
+                  <li>تقليل زمن انتظار المسار الحرج: 17%</li>
+                </ul>
+              </article>
+              <article className="card optimization-card">
+                <div className="optimization-card-head">
+                  <h3>اقتراحات تشغيلية</h3>
+                  <span className="optimization-pill optimization-pill--soft">أولوية التنفيذ</span>
+                </div>
+                <ul className="list optimization-list">
+                  <li>تحويل الحالات الخضراء إلى مركز الرعاية العاجلة.</li>
+                  <li>تفعيل مسار تقييم سريع للحالات البرتقالية.</li>
+                  <li>إعادة توزيع الطواقم في ساعات الذروة.</li>
+                </ul>
+              </article>
+            </section>
+          </div>
         )}
 
         {activeScreen === 'report' && (
-          <section className="card">
-            <h3>ملخص الإدارة التنفيذية</h3>
-            <p className="muted">
-              منصة العرض توضح الأثر المتوقع لنموذج الفرز الذكي عبر تقليل التأخير، رفع جودة
-              التوجيه، وتحسين كفاءة التشغيل في أقسام الطوارئ.
-            </p>
-            <div className="grid three compact">
-              <article className="mini">انخفاض وقت القرار الأولي: 18%</article>
-              <article className="mini">تحسن سرعة التدخل: 22%</article>
-              <article className="mini">تقليل الهدر التشغيلي: 27%</article>
-            </div>
-          </section>
+          <div className="report-page doctor-main-surface">
+            <section className="card report-card">
+              <div className="report-card-head">
+                <div>
+                  <h3 className="report-title">الملخص التنفيذي</h3>
+                  <p className="report-sub">
+                    منصة العرض توضح الأثر المتوقع لنموذج الفرز الذكي عبر تقليل التأخير، رفع جودة
+                    التوجيه، وتحسين كفاءة التشغيل في أقسام الطوارئ.
+                  </p>
+                </div>
+                <span className="report-pill">ملخص يومي</span>
+              </div>
+              <div className="grid three compact report-metrics">
+                <article className="mini report-mini">انخفاض وقت القرار الأولي: 18%</article>
+                <article className="mini report-mini">تحسن سرعة التدخل: 22%</article>
+                <article className="mini report-mini">تقليل الهدر التشغيلي: 27%</article>
+              </div>
+            </section>
+          </div>
         )}
       </main>
     </div>
